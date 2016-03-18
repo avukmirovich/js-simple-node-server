@@ -6,6 +6,7 @@ var ctypes = require('./content-types');
 
 var serverRoot = path.join(__dirname, 'public');
 var serverIndex = 'index.html';
+var port = process.env.PORT || 3000;
 
 function logRequest(method, fileName, statusCode) {
     console.log([method, fileName, statusCode].join(' -> '));
@@ -49,4 +50,6 @@ http.createServer(function(req, res) {
 
     fs.stat(filePath, getFileHandler(req, res, filePath, fileName));
 
-}).listen(process.env.PORT || 3000);
+}).listen(port, function() {
+    console.log('Start listening on port ' + port);
+});
