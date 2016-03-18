@@ -2,6 +2,7 @@ var http = require('http');
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
+var ctypes = require('./content-types');
 
 var serverRoot = path.join(__dirname, 'public');
 var serverIndex = 'index.html';
@@ -40,7 +41,9 @@ http.createServer(function(req, res) {
                     logRequest(method, fileName, statusCode);
                 } else {
                     statusCode = 200;
-                    res.writeHead(200, 'OK');
+                    var ctype = ctypes(filePath);
+                    
+                    res.writeHead(200, 'OK', ctype ? {'Content-Type': ctype} : {});
                     fs.createReadStream(filePath).pipe(res);
                     logRequest(method, fileName, statusCode);
                 }
