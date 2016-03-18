@@ -11,6 +11,31 @@ function logRequest(method, fileName, statusCode) {
     console.log([method, fileName, statusCode].join(' -> '));
 }
 
+function getFileHandler(req, res, filePath, fileName) {
+    function handleRequest(err, stats) {
+        if (err) {
+            res.writeHead(404, 'Not Found');
+            res.end();
+
+            logRequest(req.method, fileName, 404);
+        } else {
+            if (stats.isDirectory()) {
+                filePath = path.join(filePath, serverIndex);
+
+                fs.stat(filePath, handleRequest);
+            } else {
+                var ctype = ctypes(filePath);
+
+                res.writeHead(200, 'OK', ctype ? {'Content-Type': ctype} : {});
+                fs.createReadStream(filePath).pipe(res);
+                logRequest(req.method, fileName, 200);
+            }
+        }
+    }
+
+    return handleRequest;
+}
+
 http.createServer(function(req, res) {
 
     if (req.method != 'GET') {
@@ -21,35 +46,7 @@ http.createServer(function(req, res) {
 
     var fileName = url.parse(req.url).pathname;
     var filePath = path.join(serverRoot, fileName);
-    var method = req.method;
-    var statusCode = 404;
 
-    fs.stat(filePath, function(err, stats) {
-        if (err) {
-            res.writeHead(404, 'Not Found');
-            res.end();
-            logRequest(method, fileName, statusCode);
-        } else {
-            if (stats.isDirectory()) {
-                filePath = path.join(filePath, serverIndex);
-            }
-
-            fs.stat(filePath, function(err) {
-                if (err) {
-                    res.writeHead(404, 'Not Found');
-                    res.end();
-                    logRequest(method, fileName, statusCode);
-                } else {
-                    statusCode = 200;
-                    var ctype = ctypes(filePath);
-                    
-                    res.writeHead(200, 'OK', ctype ? {'Content-Type': ctype} : {});
-                    fs.createReadStream(filePath).pipe(res);
-                    logRequest(method, fileName, statusCode);
-                }
-            });
-        }
-
-    });
+    fs.stat(filePath, getFileHandler(req, res, filePath, fileName));
 
 }).listen(process.env.PORT || 3000);
