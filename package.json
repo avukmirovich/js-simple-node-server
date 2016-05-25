@@ -1,0 +1,22 @@
+{
+  "name": "js-simple-node-server",
+  "version": "1.0.0",
+  "description": "Simple node.js static server",
+  "main": "server.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/avukmirovich/js-simple-node-server.git"
+  },
+  "author": "Alexander Vukmirovich",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/avukmirovich/js-simple-node-server/issues"
+  },
+  "homepage": "https://github.com/avukmirovich/js-simple-node-server#readme"
+}
