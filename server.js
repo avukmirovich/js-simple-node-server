@@ -1,7 +1,6 @@
 var http = require('http');
 var path = require('path');
-var url = require('url');
-var fs = require('fs');
+var fs   = require('fs');
 var ctypes = require('./content-types');
 
 var serverRoot = path.join(__dirname, 'public');
@@ -12,44 +11,34 @@ function logRequest(method, fileName, statusCode) {
     console.log([method, fileName, statusCode].join(' -> '));
 }
 
-function getFileHandler(req, res, filePath, fileName) {
-    function handleRequest(err, stats) {
+http.createServer(function (req, res) {
+    var fileName = path.basename(req.url) || serverIndex;
+    var fileDir  = path.dirname(req.url);
+    var filePath = path.join(serverRoot, fileDir, fileName);
+
+    if (req.method !== 'GET') {
+        res.writeHead(405, 'Method Not Allowed');
+        res.end();
+
+        logRequest(req.method, fileName, 405);
+        return;
+    }
+
+    fs.stat(filePath, function (err) {
         if (err) {
             res.writeHead(404, 'Not Found');
             res.end();
 
             logRequest(req.method, fileName, 404);
         } else {
-            if (stats.isDirectory()) {
-                filePath = path.join(filePath, serverIndex);
+            var ctype = ctypes(fileName);
 
-                fs.stat(filePath, handleRequest);
-            } else {
-                var ctype = ctypes(filePath);
-
-                res.writeHead(200, 'OK', ctype ? {'Content-Type': ctype} : {});
-                fs.createReadStream(filePath).pipe(res);
-                logRequest(req.method, fileName, 200);
-            }
+            res.writeHead(200, 'OK', ctype ? { 'Content-Type': ctype } : null);
+            fs.createReadStream(filePath).pipe(res);
+            logRequest(req.method, fileName, 200);
         }
-    }
+    });
 
-    return handleRequest;
-}
-
-http.createServer(function(req, res) {
-
-    if (req.method != 'GET') {
-        res.writeHead(405, 'Method Not Allowed');
-        res.end();
-        return;
-    }
-
-    var fileName = url.parse(req.url).pathname;
-    var filePath = path.join(serverRoot, fileName);
-
-    fs.stat(filePath, getFileHandler(req, res, filePath, fileName));
-
-}).listen(port, function() {
+}).listen(port, function () {
     console.log('Start listening on port ' + port);
 });
